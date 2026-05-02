@@ -5,210 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>クイックQR | Pinda Lab</title>
 <meta name="description" content="テキストやURLをすぐにQRコードに!画像保存もできるシンプルなQR生成ツール。">
-<meta property="og:title" content="クイックQR">
-<meta property="og:description" content="テキスト/URL→QRコード即生成。PNG保存対応。">
+<meta property="og:title" content="Quick QR">
+<meta property="og:description" content="Instantly turn text/URL into QR code. PNG export.">
 <meta property="og:url" content="https://pndshch.github.io/quick-qr/">
 <meta name="twitter:card" content="summary">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-    background: #0d1117;
-    color: #e6edf3;
-    font-family: 'Hiragino Sans', system-ui, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 16px 32px;
-}
-.topbar {
-    width: 100%; max-width: 480px;
-    display: flex; justify-content: space-between;
-    color: #6d7680; font-size: 12px; margin-bottom: 12px;
-}
+body { background: #0d1117; color: #e6edf3; font-family: 'Hiragino Sans', system-ui, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 32px; }
+.lang-switch { position: fixed; top: 12px; right: 12px; display: flex; gap: 2px; background: rgba(22,27,34,0.9); border: 1px solid #30363d; border-radius: 8px; padding: 3px; z-index: 1000; }
+.lang-btn { background: transparent; border: none; color: #7d8590; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-family: system-ui, sans-serif; }
+.lang-btn.active { background: #06b6d4; color: #fff; }
+.topbar { width: 100%; max-width: 480px; display: flex; justify-content: space-between; color: #6d7680; font-size: 12px; margin-bottom: 12px; }
 .topbar a { color: #6d7680; text-decoration: none; }
-.brand-title {
-    font-size: 30px; font-weight: 800; text-align: center;
-    background: linear-gradient(135deg, #06b6d4, #14b8a6);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-}
+.brand-title { font-size: 30px; font-weight: 800; text-align: center; background: linear-gradient(135deg, #06b6d4, #14b8a6); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .brand-sub { color: #8b949e; font-size: 13px; text-align: center; margin-top: 4px; margin-bottom: 16px; }
-
-.card {
-    width: 100%;
-    max-width: 480px;
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 16px;
-    padding: 18px;
-}
-.label {
-    font-size: 11px;
-    color: #8b949e;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    font-weight: 700;
-}
-textarea {
-    width: 100%;
-    min-height: 90px;
-    background: #0d1117;
-    border: 2px solid #30363d;
-    color: #e6edf3;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 15px;
-    font-family: inherit;
-    resize: vertical;
-    outline: none;
-}
+.card { width: 100%; max-width: 480px; background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 18px; }
+.label { font-size: 11px; color: #8b949e; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; font-weight: 700; }
+textarea { width: 100%; min-height: 90px; background: #0d1117; border: 2px solid #30363d; color: #e6edf3; border-radius: 10px; padding: 12px; font-size: 15px; font-family: inherit; resize: vertical; outline: none; }
 textarea:focus { border-color: #06b6d4; }
-
-.options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 12px;
-}
-.opt {
-    background: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 8px 12px;
-}
-.opt-label {
-    font-size: 10px;
-    color: #6d7680;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-.opt select, .opt input[type="color"] {
-    width: 100%;
-    background: transparent;
-    color: #fff;
-    border: none;
-    font-family: inherit;
-    font-size: 14px;
-    padding: 4px 0;
-    outline: none;
-    cursor: pointer;
-}
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.opt { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 8px 12px; }
+.opt-label { font-size: 10px; color: #6d7680; letter-spacing: 1px; text-transform: uppercase; }
+.opt select, .opt input[type="color"] { width: 100%; background: transparent; color: #fff; border: none; font-family: inherit; font-size: 14px; padding: 4px 0; outline: none; cursor: pointer; }
 .opt input[type="color"] { padding: 0; height: 28px; }
-
-.qr-wrap {
-    margin-top: 16px;
-    background: #fff;
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 1;
-    max-width: 100%;
-}
-canvas#qr {
-    width: 100% !important;
-    height: auto !important;
-    max-width: 360px;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-}
-
-.actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-    width: 100%;
-    max-width: 480px;
-}
-.btn {
-    flex: 1;
-    padding: 13px;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    color: #fff;
-}
+.qr-wrap { margin-top: 16px; background: #fff; border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; max-width: 100%; }
+canvas#qr { width: 100% !important; height: auto !important; max-width: 360px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.actions { display: flex; gap: 8px; margin-top: 14px; width: 100%; max-width: 480px; }
+.btn { flex: 1; padding: 13px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; color: #fff; }
 .btn:active { transform: scale(0.97); }
 .btn-download { background: #2ea043; }
 .btn-copy { background: #4b5563; }
 .btn-copy.copied { background: #2ea043; }
-
-.examples {
-    margin-top: 14px;
-    width: 100%;
-    max-width: 480px;
-    text-align: center;
-}
+.examples { margin-top: 14px; width: 100%; max-width: 480px; text-align: center; }
 .ex-label { color: #6d7680; font-size: 11px; margin-bottom: 6px; }
-.ex-list {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-.ex {
-    background: #21262d;
-    border: 1px solid #30363d;
-    color: #8b949e;
-    padding: 6px 10px;
-    border-radius: 16px;
-    font-size: 12px;
-    cursor: pointer;
-}
+.ex-list { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.ex { background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 6px 10px; border-radius: 16px; font-size: 12px; cursor: pointer; }
 .ex:hover { color: #fff; border-color: #06b6d4; }
-
-.footer {
-    margin-top: 18px;
-    color: #6d7680;
-    font-size: 11px;
-    text-align: center;
-}
+.footer { margin-top: 18px; color: #6d7680; font-size: 11px; text-align: center; }
 .footer a { color: #6d7680; text-decoration: none; }
 </style>
 </head>
 <body>
+<div class="lang-switch">
+    <button class="lang-btn" data-lang="ja">JP</button>
+    <button class="lang-btn" data-lang="en">EN</button>
+</div>
 <div class="topbar">
-    <a href="https://pndshch.github.io/">← Pinda Lab</a>
-    <span>クイックQR</span>
+    <a href="https://pndshch.github.io/" data-i18n="back">← Pinda Lab</a>
+    <span data-i18n="title">クイックQR</span>
 </div>
 
-<div class="brand-title">クイックQR</div>
-<div class="brand-sub">テキストや URL を すぐ QR コードに</div>
+<div class="brand-title" data-i18n="title">クイックQR</div>
+<div class="brand-sub" data-i18n="subtitle">テキストや URL を すぐ QR コードに</div>
 
 <div class="card">
-    <div class="label">📝 ないよう (テキスト or URL)</div>
-    <textarea id="input" placeholder="ここに入力 (例: https://pndshch.github.io/)" rows="3">https://pndshch.github.io/</textarea>
+    <div class="label" data-i18n="contentLabel">📝 ないよう (テキスト or URL)</div>
+    <textarea id="input" rows="3" data-i18n-placeholder="placeholder">https://pndshch.github.io/</textarea>
 
     <div class="options">
         <div class="opt">
-            <div class="opt-label">サイズ</div>
+            <div class="opt-label" data-i18n="sizeLabel">サイズ</div>
             <select id="size">
                 <option value="200">200px</option>
                 <option value="300" selected>300px</option>
                 <option value="500">500px</option>
-                <option value="800">800px (大)</option>
+                <option value="800" data-i18n="sizeLarge">800px (大)</option>
             </select>
         </div>
         <div class="opt">
-            <div class="opt-label">エラー訂正</div>
+            <div class="opt-label" data-i18n="eclLabel">エラー訂正</div>
             <select id="ecl">
-                <option value="L">L (低)</option>
-                <option value="M" selected>M (中)</option>
-                <option value="Q">Q (高)</option>
-                <option value="H">H (最高)</option>
+                <option value="L" data-i18n="eclL">L (低)</option>
+                <option value="M" selected data-i18n="eclM">M (中)</option>
+                <option value="Q" data-i18n="eclQ">Q (高)</option>
+                <option value="H" data-i18n="eclH">H (最高)</option>
             </select>
         </div>
         <div class="opt">
-            <div class="opt-label">前景色</div>
+            <div class="opt-label" data-i18n="fgLabel">前景色</div>
             <input type="color" id="fg" value="#0d1117">
         </div>
         <div class="opt">
-            <div class="opt-label">背景色</div>
+            <div class="opt-label" data-i18n="bgLabel">背景色</div>
             <input type="color" id="bg" value="#ffffff">
         </div>
     </div>
@@ -219,17 +97,17 @@ canvas#qr {
 </div>
 
 <div class="actions">
-    <button class="btn btn-download" id="download">⬇ PNGで保存</button>
-    <button class="btn btn-copy" id="copy">📋 画像コピー</button>
+    <button class="btn btn-download" id="download" data-i18n="download">⬇ PNGで保存</button>
+    <button class="btn btn-copy" id="copy" data-i18n="copy">📋 画像コピー</button>
 </div>
 
 <div class="examples">
-    <div class="ex-label">れい:</div>
+    <div class="ex-label" data-i18n="examples">れい:</div>
     <div class="ex-list">
-        <span class="ex" data-t="https://pndshch.github.io/">Pinda Lab</span>
-        <span class="ex" data-t="WIFI:T:WPA;S:MyNetwork;P:password;;">WiFi接続</span>
-        <span class="ex" data-t="mailto:hndshch@gmail.com">メール</span>
-        <span class="ex" data-t="tel:09012345678">電話</span>
+        <span class="ex" data-t="https://pndshch.github.io/" data-i18n="exHub">Pinda Lab</span>
+        <span class="ex" data-t="WIFI:T:WPA;S:MyNetwork;P:password;;" data-i18n="exWifi">WiFi接続</span>
+        <span class="ex" data-t="mailto:hndshch@gmail.com" data-i18n="exMail">メール</span>
+        <span class="ex" data-t="tel:09012345678" data-i18n="exTel">電話</span>
     </div>
 </div>
 
@@ -240,72 +118,80 @@ canvas#qr {
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 'use strict';
+const I18N = {
+    ja: { title: 'クイックQR', subtitle: 'テキストや URL を すぐ QR コードに', back: '← Pinda Lab',
+          contentLabel: '📝 ないよう (テキスト or URL)', placeholder: 'ここに入力 (例: https://pndshch.github.io/)',
+          sizeLabel: 'サイズ', sizeLarge: '800px (大)',
+          eclLabel: 'エラー訂正', eclL: 'L (低)', eclM: 'M (中)', eclQ: 'Q (高)', eclH: 'H (最高)',
+          fgLabel: '前景色', bgLabel: '背景色',
+          download: '⬇ PNGで保存', copy: '📋 画像コピー', copied: '✓ コピーしました',
+          notSupported: '✗ 非対応', failed: '✗ 失敗',
+          examples: 'れい:', exHub: 'Pinda Lab', exWifi: 'WiFi接続', exMail: 'メール', exTel: '電話' },
+    en: { title: 'Quick QR', subtitle: 'Turn text or URL into a QR code', back: '← Pinda Lab',
+          contentLabel: '📝 Content (Text or URL)', placeholder: 'Enter text or URL (e.g. https://pndshch.github.io/)',
+          sizeLabel: 'Size', sizeLarge: '800px (Large)',
+          eclLabel: 'Error Correction', eclL: 'L (Low)', eclM: 'M (Medium)', eclQ: 'Q (High)', eclH: 'H (Max)',
+          fgLabel: 'Foreground', bgLabel: 'Background',
+          download: '⬇ Save PNG', copy: '📋 Copy image', copied: '✓ Copied',
+          notSupported: '✗ Not supported', failed: '✗ Failed',
+          examples: 'Examples:', exHub: 'Pinda Lab', exWifi: 'WiFi', exMail: 'Email', exTel: 'Phone' },
+};
+let curLang = 'ja';
+function applyLang(lang) {
+    curLang = lang;
+    const dict = I18N[lang] || I18N.ja;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.dataset.i18n; if (dict[key]) el.textContent = dict[key]; });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.dataset.i18nPlaceholder; if (dict[key]) el.placeholder = dict[key]; });
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    try { localStorage.setItem('pl-lang', lang); } catch {}
+    document.title = dict.title + ' | Pinda Lab';
+}
+document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', () => applyLang(btn.dataset.lang)));
+
 const inp = document.getElementById('input');
 const canvas = document.getElementById('qr');
 const sizeSel = document.getElementById('size');
 const eclSel = document.getElementById('ecl');
 const fgInp = document.getElementById('fg');
 const bgInp = document.getElementById('bg');
-
 let renderTimer = null;
 function render() {
     const text = inp.value || ' ';
-    const size = parseInt(sizeSel.value, 10);
-    const ecl = eclSel.value;
-    const fg = fgInp.value;
-    const bg = bgInp.value;
-
-    QRCode.toCanvas(canvas, text, {
-        width: size,
-        margin: 2,
-        errorCorrectionLevel: ecl,
-        color: { dark: fg, light: bg },
-    }, (err) => {
-        if (err) console.error(err);
-    });
+    QRCode.toCanvas(canvas, text, { width: parseInt(sizeSel.value, 10), margin: 2, errorCorrectionLevel: eclSel.value, color: { dark: fgInp.value, light: bgInp.value } }, () => {});
 }
-function debounceRender() {
-    clearTimeout(renderTimer);
-    renderTimer = setTimeout(render, 80);
-}
-
+function debounceRender() { clearTimeout(renderTimer); renderTimer = setTimeout(render, 80); }
 inp.addEventListener('input', debounceRender);
 [sizeSel, eclSel, fgInp, bgInp].forEach(el => el.addEventListener('input', render));
-
-document.querySelectorAll('.ex').forEach(b => b.addEventListener('click', () => {
-    inp.value = b.dataset.t;
-    render();
-}));
-
+document.querySelectorAll('.ex').forEach(b => b.addEventListener('click', () => { inp.value = b.dataset.t; render(); }));
 document.getElementById('download').addEventListener('click', () => {
     const a = document.createElement('a');
     a.download = 'qr-' + Date.now() + '.png';
     a.href = canvas.toDataURL('image/png');
     a.click();
 });
-
 document.getElementById('copy').addEventListener('click', async (e) => {
+    const dict = I18N[curLang] || I18N.ja;
     if (!navigator.clipboard || !window.ClipboardItem) {
-        e.target.textContent = '✗ 非対応';
-        setTimeout(() => e.target.textContent = '📋 画像コピー', 1500);
+        e.target.textContent = dict.notSupported;
+        setTimeout(() => e.target.textContent = dict.copy, 1500);
         return;
     }
     try {
         const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         e.target.classList.add('copied');
-        e.target.textContent = '✓ コピーしました';
-        setTimeout(() => {
-            e.target.classList.remove('copied');
-            e.target.textContent = '📋 画像コピー';
-        }, 1500);
-    } catch (err) {
-        console.error(err);
-        e.target.textContent = '✗ 失敗';
-        setTimeout(() => e.target.textContent = '📋 画像コピー', 1500);
+        e.target.textContent = dict.copied;
+        setTimeout(() => { e.target.classList.remove('copied'); e.target.textContent = dict.copy; }, 1500);
+    } catch {
+        e.target.textContent = dict.failed;
+        setTimeout(() => e.target.textContent = dict.copy, 1500);
     }
 });
-
+let initLang;
+try { initLang = localStorage.getItem('pl-lang'); } catch {}
+if (!initLang) { const nav = (navigator.language || 'ja').toLowerCase(); initLang = nav.startsWith('ja') ? 'ja' : 'en'; }
+applyLang(initLang);
 window.addEventListener('load', render);
 </script>
 </body>
