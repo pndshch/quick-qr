@@ -28,8 +28,12 @@ textarea:focus { border-color: #06b6d4; }
 .opt-label { font-size: 10px; color: #6d7680; letter-spacing: 1px; text-transform: uppercase; }
 .opt select, .opt input[type="color"] { width: 100%; background: transparent; color: #fff; border: none; font-family: inherit; font-size: 14px; padding: 4px 0; outline: none; cursor: pointer; }
 .opt input[type="color"] { padding: 0; height: 28px; }
-.qr-wrap { margin-top: 16px; background: #fff; border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; max-width: 100%; }
-canvas#qr { width: 100% !important; height: auto !important; max-width: 360px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.qr-wrap { margin-top: 16px; background: #fff; border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; max-width: 100%; position: relative; }
+.qr-wrap img { display: block; width: 100%; height: 100%; max-width: 360px; max-height: 360px; image-rendering: pixelated; image-rendering: crisp-edges; object-fit: contain; }
+.qr-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #6d7680; font-size: 13px; pointer-events: none; }
+.qr-wrap.loading .qr-loading { display: flex; }
+.qr-wrap:not(.loading) .qr-loading { display: none; }
+.qr-wrap.error img { display: none; }
 .actions { display: flex; gap: 8px; margin-top: 14px; width: 100%; max-width: 480px; }
 .btn { flex: 1; padding: 13px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; color: #fff; }
 .btn:active { transform: scale(0.97); }
@@ -91,8 +95,9 @@ canvas#qr { width: 100% !important; height: auto !important; max-width: 360px; i
         </div>
     </div>
 
-    <div class="qr-wrap" id="qr-wrap">
-        <canvas id="qr"></canvas>
+    <div class="qr-wrap loading" id="qr-wrap">
+        <div class="qr-loading" id="qr-loading" data-i18n="loading">生成中...</div>
+        <img id="qr" alt="QR Code" />
     </div>
 </div>
 
@@ -105,9 +110,9 @@ canvas#qr { width: 100% !important; height: auto !important; max-width: 360px; i
     <div class="ex-label" data-i18n="examples">れい:</div>
     <div class="ex-list">
         <span class="ex" data-t="https://pndshch.github.io/" data-i18n="exHub">Pinda Lab</span>
-        <span class="ex" data-t="WIFI:T:WPA;S:MyNetwork;P:password;;" data-i18n="exWifi">WiFi接続</span>
-        <span class="ex" data-t="mailto:hndshch@gmail.com" data-i18n="exMail">メール</span>
-        <span class="ex" data-t="tel:09012345678" data-i18n="exTel">電話</span>
+        <span class="ex" data-t="WIFI:T:WPA;S:MyHomeWiFi;P:password123;;" data-i18n="exWifi">WiFi接続</span>
+        <span class="ex" data-t="ありがとう! 🌸" data-i18n="exMsg">メッセージ</span>
+        <span class="ex" data-t="https://maps.app.goo.gl/" data-i18n="exMap">地図</span>
     </div>
 </div>
 
@@ -115,7 +120,6 @@ canvas#qr { width: 100% !important; height: auto !important; max-width: 360px; i
     <p><a href="https://pndshch.github.io/">© Pinda Lab</a> · <a href="https://www.buymeacoffee.com/pndshch" target="_blank">☕</a></p>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 'use strict';
 const I18N = {
@@ -124,17 +128,19 @@ const I18N = {
           sizeLabel: 'サイズ', sizeLarge: '800px (大)',
           eclLabel: 'エラー訂正', eclL: 'L (低)', eclM: 'M (中)', eclQ: 'Q (高)', eclH: 'H (最高)',
           fgLabel: '前景色', bgLabel: '背景色',
+          loading: '生成中...', errorMsg: '生成失敗。再試行してください',
           download: '⬇ PNGで保存', copy: '📋 画像コピー', copied: '✓ コピーしました',
           notSupported: '✗ 非対応', failed: '✗ 失敗',
-          examples: 'れい:', exHub: 'Pinda Lab', exWifi: 'WiFi接続', exMail: 'メール', exTel: '電話' },
+          examples: 'れい:', exHub: 'Pinda Lab', exWifi: 'WiFi接続', exMsg: 'メッセージ', exMap: '地図' },
     en: { title: 'Quick QR', subtitle: 'Turn text or URL into a QR code', back: '← Pinda Lab',
           contentLabel: '📝 Content (Text or URL)', placeholder: 'Enter text or URL (e.g. https://pndshch.github.io/)',
           sizeLabel: 'Size', sizeLarge: '800px (Large)',
           eclLabel: 'Error Correction', eclL: 'L (Low)', eclM: 'M (Medium)', eclQ: 'Q (High)', eclH: 'H (Max)',
           fgLabel: 'Foreground', bgLabel: 'Background',
+          loading: 'Generating...', errorMsg: 'Generation failed. Please retry.',
           download: '⬇ Save PNG', copy: '📋 Copy image', copied: '✓ Copied',
           notSupported: '✗ Not supported', failed: '✗ Failed',
-          examples: 'Examples:', exHub: 'Pinda Lab', exWifi: 'WiFi', exMail: 'Email', exTel: 'Phone' },
+          examples: 'Examples:', exHub: 'Pinda Lab', exWifi: 'WiFi', exMsg: 'Message', exMap: 'Map link' },
 };
 let curLang = 'ja';
 function applyLang(lang) {
@@ -150,25 +156,65 @@ function applyLang(lang) {
 document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', () => applyLang(btn.dataset.lang)));
 
 const inp = document.getElementById('input');
-const canvas = document.getElementById('qr');
+const qrImg = document.getElementById('qr');
+const qrWrap = document.getElementById('qr-wrap');
 const sizeSel = document.getElementById('size');
 const eclSel = document.getElementById('ecl');
 const fgInp = document.getElementById('fg');
 const bgInp = document.getElementById('bg');
+
 let renderTimer = null;
-function render() {
-    const text = inp.value || ' ';
-    QRCode.toCanvas(canvas, text, { width: parseInt(sizeSel.value, 10), margin: 2, errorCorrectionLevel: eclSel.value, color: { dark: fgInp.value, light: bgInp.value } }, () => {});
+let currentBlobUrl = null;
+
+function buildQrUrl() {
+    const text = inp.value.trim() || 'https://pndshch.github.io/';
+    const size = parseInt(sizeSel.value, 10);
+    const ecl = eclSel.value;
+    const fg = fgInp.value.replace('#','');
+    const bg = bgInp.value.replace('#','');
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&color=${fg}&bgcolor=${bg}&ecc=${ecl}&qzone=2`;
 }
-function debounceRender() { clearTimeout(renderTimer); renderTimer = setTimeout(render, 80); }
+function render() {
+    qrWrap.classList.add('loading');
+    qrWrap.classList.remove('error');
+    const url = buildQrUrl();
+    qrImg.src = url;
+}
+qrImg.addEventListener('load', () => { qrWrap.classList.remove('loading', 'error'); });
+qrImg.addEventListener('error', () => {
+    const dict = I18N[curLang] || I18N.ja;
+    qrWrap.classList.remove('loading');
+    qrWrap.classList.add('error');
+    document.getElementById('qr-loading').textContent = dict.errorMsg;
+    qrWrap.classList.add('loading');
+});
+function debounceRender() { clearTimeout(renderTimer); renderTimer = setTimeout(render, 200); }
+
 inp.addEventListener('input', debounceRender);
 [sizeSel, eclSel, fgInp, bgInp].forEach(el => el.addEventListener('input', render));
 document.querySelectorAll('.ex').forEach(b => b.addEventListener('click', () => { inp.value = b.dataset.t; render(); }));
-document.getElementById('download').addEventListener('click', () => {
-    const a = document.createElement('a');
-    a.download = 'qr-' + Date.now() + '.png';
-    a.href = canvas.toDataURL('image/png');
-    a.click();
+
+async function fetchBlob() {
+    const url = buildQrUrl();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('fetch failed');
+    return await res.blob();
+}
+document.getElementById('download').addEventListener('click', async (e) => {
+    const dict = I18N[curLang] || I18N.ja;
+    const original = e.target.textContent;
+    try {
+        const blob = await fetchBlob();
+        if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.download = 'qr-' + Date.now() + '.png';
+        a.href = currentBlobUrl;
+        a.click();
+    } catch {
+        e.target.textContent = dict.failed;
+        setTimeout(() => e.target.textContent = original, 1500);
+    }
 });
 document.getElementById('copy').addEventListener('click', async (e) => {
     const dict = I18N[curLang] || I18N.ja;
@@ -178,7 +224,7 @@ document.getElementById('copy').addEventListener('click', async (e) => {
         return;
     }
     try {
-        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        const blob = await fetchBlob();
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         e.target.classList.add('copied');
         e.target.textContent = dict.copied;
@@ -188,11 +234,12 @@ document.getElementById('copy').addEventListener('click', async (e) => {
         setTimeout(() => e.target.textContent = dict.copy, 1500);
     }
 });
+
 let initLang;
 try { initLang = localStorage.getItem('pl-lang'); } catch {}
 if (!initLang) { const nav = (navigator.language || 'ja').toLowerCase(); initLang = nav.startsWith('ja') ? 'ja' : 'en'; }
 applyLang(initLang);
-window.addEventListener('load', render);
+render();
 </script>
 </body>
 </html>
